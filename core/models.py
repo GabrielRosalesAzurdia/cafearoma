@@ -49,6 +49,7 @@ class ProductBatch(models.Model):
     cupping_score = models.FloatField(null=True, blank=True)  # control de calidad
     mfg_date = models.DateTimeField(default=timezone.now)
     expiry_date = models.DateField()
+    is_distribution_ready = models.BooleanField(default=False)
 
 # --- Pedidos y Distribución ---
 class DeliverySpeed(models.TextChoices):

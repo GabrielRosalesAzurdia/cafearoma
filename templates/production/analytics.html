@@ -1,0 +1,184 @@
+{% extends 'base.html' %} {% block title %}Análisis de Producción - Café Aroma
+{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1>📊 Análisis de Producción</h1>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <a
+          href="{% url 'production:download_report' 'pdf' %}"
+          class="btn btn-danger"
+        >
+          📥 Descargar PDF
+        </a>
+        <a
+          href="{% url 'production:download_report' 'csv' %}"
+          class="btn btn-success"
+        >
+          📥 Descargar CSV
+        </a>
+        <a href="{% url 'production:report' %}" class="btn btn-info">
+          📋 Reporte Simple
+        </a>
+      </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card text-white bg-primary">
+          <div class="card-body">
+            <h5 class="card-title">Total Tareas</h5>
+            <p class="card-text display-6">{{ total_tasks }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-success">
+          <div class="card-body">
+            <h5 class="card-title">Completadas</h5>
+            <p class="card-text display-6">{{ completed_tasks }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-warning">
+          <div class="card-body">
+            <h5 class="card-title">En Progreso</h5>
+            <p class="card-text display-6">{{ in_progress_tasks }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-info">
+          <div class="card-body">
+            <h5 class="card-title">Café Producido</h5>
+            <p class="card-text display-6">
+              {{ total_coffee_kg|floatformat:1 }} kg
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <!-- Distribución por Etapas -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5>📈 Tareas por Etapa</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Etapa</th>
+                  <th>Cantidad</th>
+                  <th>Porcentaje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for stage_name, count in stages_data.items %}
+                <tr>
+                  <td>{{ stage_name }}</td>
+                  <td>{{ count }}</td>
+                  <td>
+                    {% if total_tasks > 0 %} {{ count|floatformat:1 }}% {% else
+                    %} 0% {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Producción por Tipo de Café -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5>☕ Producción por Tipo</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Lotes</th>
+                  <th>Total (kg)</th>
+                  <th>Puntuación Prom.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for type_name, data in coffee_types_data.items %}
+                <tr>
+                  <td>{{ type_name }}</td>
+                  <td>{{ data.count }}</td>
+                  <td>{{ data.total_kg|floatformat:1 }} kg</td>
+                  <td>
+                    {% if data.avg_score > 0 %}
+                    <span class="badge bg-success"
+                      >{{ data.avg_score|floatformat:1 }}</span
+                    >
+                    {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lotes Recientes -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>📦 Lotes Más Recientes</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Tipo</th>
+                  <th>Cantidad</th>
+                  <th>Puntuación</th>
+                  <th>Fecha Prod.</th>
+                  <th>Fecha Venc.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for batch in batches %}
+                <tr>
+                  <td><strong>{{ batch.code }}</strong></td>
+                  <td>{{ batch.get_coffee_type_display }}</td>
+                  <td>{{ batch.qty_kg }}kg</td>
+                  <td>
+                    {% if batch.cupping_score %}
+                    <span class="badge bg-success"
+                      >{{ batch.cupping_score }}</span
+                    >
+                    {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ batch.mfg_date }}</td>
+                  <td>{{ batch.expiry_date }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

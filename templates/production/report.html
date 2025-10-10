@@ -1,0 +1,30 @@
+{% extends 'base.html' %} {% block title %} Reporte de Producción - Café Aroma
+{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1>📊 Reporte de Producción</h1>
+
+    <div class="card">
+      <div class="card-body">
+        <pre
+          style="
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+          "
+        >
+{% for line in report %}{{ line }}{% if not forloop.last %}
+{% endif %}{% endfor %}
+                </pre
+        >
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a href="{% url 'production:dashboard' %}" class="btn btn-secondary"
+        >← Volver al Dashboard</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -16,8 +16,8 @@
         <div class="navbar-nav">
           <a class="nav-link" href="{% url 'inventory:dashboard' %}">📦 Inventario</a>
           <a class="nav-link" href="{% url 'production:dashboard' %}">⚙️ Producción</a>
-          <a class="nav-link" href="{% url 'products:combos_dashboard' %}">🎁 Combos</a>  <!-- NUEVO -->
-          <a class="nav-link" href="{% url 'orders:dashboard' %}">🚚 Pedidos</a>
+          {% comment %} <a class="nav-link" href="{% url 'products:combos_dashboard' %}">🎁 Combos</a>  <!-- NUEVO -->
+          <a class="nav-link" href="{% url 'orders:dashboard' %}">🚚 Pedidos</a> {% endcomment %}
           <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
         </div>
       </div>

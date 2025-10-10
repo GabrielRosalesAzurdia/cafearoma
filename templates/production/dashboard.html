@@ -1,0 +1,228 @@
+{% extends 'base.html' %} {% block title %}Producción - Café Aroma{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1>⚙️ Gestión de Producción</h1>
+
+    <!-- Mostrar mensajes -->
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div
+        class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <a href="{% url 'production:analytics' %}" class="btn btn-info"
+          >📊 Ver Análisis</a
+        >
+        <a href="{% url 'production:report' %}" class="btn btn-secondary"
+          >📋 Reporte Simple</a
+        >
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Formulario Iniciar Producción -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h5>🏭 Iniciar Producción</h5>
+          </div>
+          <div class="card-body">
+            <form
+              method="post"
+              action="{% url 'production:start_production' %}"
+            >
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">SKU Materia Prima *</label>
+                <input
+                  type="text"
+                  name="sku"
+                  class="form-control"
+                  placeholder="Ej: ARAB-001"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Cantidad (kg) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  name="kg"
+                  class="form-control"
+                  placeholder="Ej: 10.5"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Tipo de Procesamiento *</label>
+                <select name="kind" class="form-control" required>
+                  <option value="arabica">Arábica</option>
+                  <option value="robusta">Robusta</option>
+                  <option value="blend">Blend</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Tipo de Café *</label>
+                <select name="coffee_type" class="form-control" required>
+                  <option value="AR">Arábica</option>
+                  <option value="RO">Robusta</option>
+                  <option value="BL">Blend</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Iniciar Producción
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tareas de Producción -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h5>📋 Tareas de Producción Activas</h5>
+          </div>
+          <div class="card-body">
+            {% if tasks %}
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Etapa</th>
+                  <th>Progreso</th>
+                  <th>Cantidad</th>
+                  <th>Fecha Inicio</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for task in tasks %}
+                <tr>
+                  <td><strong>#{{ task.id }}</strong></td>
+                  <td>
+                    <span
+                      class="badge bg-{% if task.stage == 'CO' %}success{% else %}warning{% endif %}"
+                    >
+                      {{ task.get_stage_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="progress" style="height: 20px">
+                      <div
+                        class="progress-bar"
+                        role="progressbar"
+                        style="width: {{ task.progress }}%;"
+                        aria-valuenow="{{ task.progress }}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      >
+                        {{ task.progress }}%
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ task.planned_kg }}kg</td>
+                  <td>{{ task.created_at|date:"d/m/Y H:i" }}</td>
+                  <td>
+                    {% if task.stage != 'CO' %}
+                    <a
+                      href="{% url 'production:advance_stage' task.id %}"
+                      class="btn btn-success btn-sm"
+                    >
+                      ⏭️ Avanzar
+                    </a>
+                    {% endif %}
+                    <a
+                      href="{% url 'production:task_detail' task.id %}"
+                      class="btn btn-info btn-sm"
+                      >📋 Detalle</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">
+              <p>
+                No hay tareas de producción activas. ¡Inicia una nueva
+                producción!
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Lotes de Producción -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5>📦 Lotes de Producción Terminados</h5>
+          </div>
+          <div class="card-body">
+            {% if batches %}
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Tipo</th>
+                  <th>Cantidad</th>
+                  <th>Fecha Prod.</th>
+                  <th>Puntuación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for batch in batches|slice:":5" %}
+                <tr>
+                  <td><strong>{{ batch.code }}</strong></td>
+                  <td>{{ batch.get_coffee_type_display }}</td>
+                  <td>{{ batch.qty_kg }}kg</td>
+                  <td>{{ batch.mfg_date }}</td>
+                  <td>
+                    {% if batch.cupping_score %}
+                    <span class="badge bg-success"
+                      >{{ batch.cupping_score }}</span
+                    >
+                    {% else %}
+                    <span class="badge bg-secondary">Pendiente</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a
+                      href="{% url 'production:batch_detail' batch.code %}"
+                      class="btn btn-info btn-sm"
+                      >📋 Detalle</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">
+              <p>No hay lotes de producción terminados.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

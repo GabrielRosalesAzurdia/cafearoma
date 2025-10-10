@@ -1,0 +1,258 @@
+{% extends 'base.html' %} {% block title %}Inventario - Café Aroma{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1>📦 Gestión de Inventario</h1>
+
+    <!-- Mostrar mensajes -->
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div
+        class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Alertas de Stock Bajo -->
+    {% if low_stock_items %}
+    <div class="alert alert-warning">
+      <h5>⚠️ Alertas de Stock Bajo</h5>
+      <ul>
+        {% for item in low_stock_items %}
+        <li>
+          {{ item.name }} ({{ item.sku }}): {{ item.stock_kg }} kg - Mínimo: .
+          {{ item.min_stock_kg }}kg
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Controles de Comandos -->
+    <!-- En la sección de controles de comandos, agregar: -->
+    <div class="card mb-4">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <h5>📊 Reportes de Inventario</h5>
+      </div>
+      <div class="card-body">
+        <a
+          href="{% url 'inventory:download_report' %}"
+          class="btn btn-outline-primary"
+        >
+          📥 Descargar Reporte CSV
+        </a>
+        <small class="text-muted d-block mt-2"
+          >Incluye items de inventario y materia prima</small
+        >
+      </div>
+    </div>
+    <div class="card mb-4">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <h5>🔄 Control de Comandos</h5>
+        <div>
+          <a
+            href="{% url 'inventory:undo' %}"
+            class="btn btn-outline-warning btn-sm"
+            >↩️ Deshacer Último</a
+          >
+          <a
+            href="{% url 'inventory:clear_history' %}"
+            class="btn btn-outline-danger btn-sm"
+            >🗑️ Limpiar Historial</a
+          >
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="mb-2">
+          <strong>Historial de comandos:</strong> {{ command_history|length }}
+          comandos
+        </p>
+        {% if command_history %}
+        <div class="command-history">
+          <small>Últimos comandos (más reciente primero):</small>
+          <ul class="list-unstyled">
+            {% for cmd in command_history reversed %}
+            <li>
+              <small>
+                • {{ cmd.type }} {% if cmd.sku %}- SKU: {{ cmd.sku }}{% endif %}
+                {% if cmd.kg %}- Cantidad: {{ cmd.kg }}kg{% endif %}
+              </small>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% else %}
+        <p class="text-muted"><small>No hay comandos en el historial</small></p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Formulario Agregar Producto -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h5>➕ Agregar Nuevo Producto</h5>
+          </div>
+          <div class="card-body">
+            <form method="post" action="{% url 'inventory:add_product' %}">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">SKU *</label>
+                <input
+                  type="text"
+                  name="sku"
+                  class="form-control"
+                  placeholder="Ej: NEW-001"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nombre *</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  placeholder="Nombre del producto"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Tipo *</label>
+                <select name="type" class="form-control" required>
+                  <option value="AR">Arábica</option>
+                  <option value="RO">Robusta</option>
+                  <option value="BL">Blend</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Stock Inicial (kg) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  name="stock_kg"
+                  class="form-control"
+                  placeholder="Ej: 50.0"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Stock Mínimo (kg) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  name="min_stock_kg"
+                  class="form-control"
+                  placeholder="Ej: 10.0"
+                  value="10.0"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-success">
+                Agregar Producto
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Items -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h5>📋 Items en Inventario</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Stock (kg)</th>
+                  <th>Mínimo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in items %}
+                <tr>
+                  <td><strong>{{ item.sku }}</strong></td>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.get_type_display }}</td>
+                  <td>{{ item.stock_kg }}kg</td>
+                  <td>{{ item.min_stock_kg }}kg</td>
+                  <td>
+                    <!-- Form para agregar stock -->
+                    <form
+                      method="post"
+                      action="{% url 'inventory:add_stock' %}"
+                      class="d-inline"
+                    >
+                      {% csrf_token %}
+                      <input type="hidden" name="sku" value="{{ item.sku }}" />
+                      <div class="input-group input-group-sm">
+                        <input
+                          type="number"
+                          step="0.1"
+                          name="kg"
+                          class="form-control"
+                          placeholder="kg"
+                          style="width: 80px"
+                          required
+                        />
+                        <button type="submit" class="btn btn-success btn-sm">
+                          ➕
+                        </button>
+                      </div>
+                    </form>
+                    <!-- Form para consumir stock -->
+                    <form
+                      method="post"
+                      action="{% url 'inventory:consume_stock' %}"
+                      class="d-inline"
+                    >
+                      {% csrf_token %}
+                      <input type="hidden" name="sku" value="{{ item.sku }}" />
+                      <div class="input-group input-group-sm mt-1">
+                        <input
+                          type="number"
+                          step="0.1"
+                          name="kg"
+                          class="form-control"
+                          placeholder="kg"
+                          style="width: 80px"
+                          required
+                        />
+                        <button type="submit" class="btn btn-warning btn-sm">
+                          ➖
+                        </button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

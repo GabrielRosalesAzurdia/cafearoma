@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load order_filters %}
+<!-- AÑADIR ESTA LÍNEA AL INICIO -->
+{% block title %}
+  Pedidos - Café Aroma
+{% endblock title %}
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      <h1>🚚 Gestión de Pedidos</h1>
+      <!-- Mostrar mensajes -->
+      {% if messages %}
+        <div class="messages mb-4">
+          {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+                 role="alert">
+              {{ message }}
+              <button type="button"
+                      class="btn-close"
+                      data-bs-dismiss="alert"
+                      aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="row">
+        <!-- Formulario Crear Orden -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h5>➕ Nueva Orden</h5>
+            </div>
+            <div class="card-body">
+              <form method="post" action="{% url 'orders:create_order' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <input type="text"
+                         name="customer"
+                         class="form-control"
+                         placeholder="Cliente"
+                         required>
+                </div>
+                <div class="mb-3">
+                  <select name="delivery_speed" class="form-control" required>
+                    <option value="EC">🚚 Económica (3-5 días)</option>
+                    <option value="RA">🚀 Rápida (24h)</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear Orden</button>
+              </form>
+            </div>
+          </div>
+          <!-- Información del Sistema -->
+          <div class="card mt-4">
+            <div class="card-header">
+              <h6>ℹ️ Información</h6>
+            </div>
+            <div class="card-body">
+              <p class="small">
+                <strong>Planificar Ruta:</strong> Define la estrategia de distribución óptima.
+              </p>
+              <p class="small">
+                <strong>Crear Envío:</strong> Integra con el sistema de logística externo.
+              </p>
+              <p class="small">
+                <strong>Estado de Envío:</strong> Consulta el tracking del pedido.
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Lista de Órdenes -->
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5>📦 Órdenes Activas</h5>
+              <span class="badge bg-primary">{{ orders.count }} órdenes</span>
+            </div>
+            <div class="card-body">
+              {% if orders %}
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cliente</th>
+                      <th>Fecha</th>
+                      <th>Tipo Entrega</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for order in orders %}
+                      <tr>
+                        <td>
+                          <strong>#{{ order.id }}</strong>
+                        </td>
+                        <td>{{ order.customer }}</td>
+                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>
+                          {% if order.delivery_speed == 'RA' %}
+                            <span class="badge bg-danger">🚀 Rápida</span>
+                          {% else %}
+                            <span class="badge bg-warning">💰 Económica</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="badge {% if order.status == 'DELIVERED' %}bg-success {% elif order.status == 'SHIPPED' %}bg-info {% elif order.status == 'PROCESSING' %}bg-primary {% else %}bg-secondary{% endif %}">
+                            {{ order.get_status_display }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group" role="group">
+                            <a href="{% url 'orders:plan_distribution' order.id %}"
+                               class="btn btn-info btn-sm"
+                               title="Planificar ruta de entrega">🗺️ Planificar</a>
+                            {% if order.status == 'PENDING' or order.status == 'PROCESSING' %}
+                              <a href="{% url 'orders:create_shipment' order.id %}"
+                                 class="btn btn-success btn-sm"
+                                 title="Crear envío con logística externa">📦 Enviar</a>
+                            {% endif %}
+                            {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
+                              <a href="{% url 'orders:shipment_status' order.id %}"
+                                 class="btn btn-warning btn-sm"
+                                 title="Ver estado del envío">📊 Estado</a>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <div class="alert alert-info">
+                  <p>No hay órdenes activas. ¡Crea una nueva orden!</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <!-- Estadísticas Rápidas -->
+          <div class="card mt-4">
+            <div class="card-header">
+              <h6>📊 Resumen de Pedidos</h6>
+            </div>
+            <div class="card-body">
+              <div class="row text-center">
+                <div class="col-md-3">
+                  <div class="border rounded p-2">
+                    <small class="text-muted">Total</small>
+                    <h5 class="mb-0">{{ orders.count }}</h5>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="border rounded p-2">
+                    <small class="text-muted">Pendientes</small>
+                    <h5 class="mb-0 text-warning">{{ orders|filter_by_status:"PENDING"|length }}</h5>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="border rounded p-2">
+                    <small class="text-muted">Enviados</small>
+                    <h5 class="mb-0 text-info">{{ orders|filter_by_status:"SHIPPED"|length }}</h5>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="border rounded p-2">
+                    <small class="text-muted">Entregados</small>
+                    <h5 class="mb-0 text-success">{{ orders|filter_by_status:"DELIVERED"|length }}</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

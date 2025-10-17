@@ -1,0 +1,74 @@
+{% extends 'base.html' %} {% block title %}Estado de Envío - Orden #{{ order.id
+}}{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-12">
+    <h1>🚚 Estado de Envío - Orden #{{ order.id }}</h1>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>Información de la Orden</h5>
+        <table class="table table-bordered">
+          <tr>
+            <th>Cliente</th>
+            <td>{{ order.customer }}</td>
+          </tr>
+          <tr>
+            <th>Tipo de Entrega</th>
+            <td>{{ order.get_delivery_speed_display }}</td>
+          </tr>
+          <tr>
+            <th>Estado</th>
+            <td>
+              <span
+                class="badge bg-{% if order.status == 'DELIVERED' %}success{% else %}warning{% endif %}"
+              >
+                {{ order.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th>Transportista</th>
+            <td>{{ delivery.route }}</td>
+          </tr>
+        </table>
+
+        <h5 class="mt-4">Estado del Envío</h5>
+        {% if shipment_status %}
+        <div class="alert alert-info">
+          <table class="table table-bordered">
+            <tr>
+              <th>Número de Seguimiento</th>
+              <td>{{ shipment_status.tracking_number }}</td>
+            </tr>
+            <tr>
+              <th>Estado Actual</th>
+              <td>
+                <span
+                  class="badge {% if shipment_status.status == 'DELIVERED' %}bg-success {% elif shipment_status.status == 'IN_TRANSIT' %}bg-primary {% else %}bg-warning{% endif %}"
+                >
+                  {{ shipment_status.status }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th>Entrega Estimada</th>
+              <td>{{ shipment_status.estimated_delivery }}</td>
+            </tr>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+          No hay información de seguimiento disponible.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a href="{% url 'orders:dashboard' %}" class="btn btn-secondary"
+        >← Volver a Pedidos</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - Café Aroma{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <h1>📋 {{ title }}</h1>
+            <p class="lead">Explora nuestra selección de combos creados con el patrón Abstract Factory</p>
+            <div class="row">
+                {% for item in combos %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">{{ item.combo.combo_name }}</h5>
+                                <small class="text-muted">{{ item.type_info.name }}</small>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="text-primary">☕ {{ item.combo.coffee.label }}</h6>
+                                <p class="mb-1">
+                                    <strong>🍵 Taza:</strong> {{ item.combo.mug }}
+                                </p>
+                                <p class="mb-1">
+                                    <strong>⏳ Filtro:</strong> {{ item.combo.filter }}
+                                </p>
+                                <p class="mb-1">
+                                    <strong>💰 Precio:</strong> ${{ item.combo.get_total_price|floatformat:2 }}
+                                </p>
+                                <p class="mb-0">
+                                    <small class="text-success">🎉 Incluye {{ item.combo.discount|floatformat:0 }}% de descuento</small>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <span class="badge bg-secondary text-capitalize">{{ item.coffee_type }}</span>
+                                <span class="badge bg-info">{{ item.type_info.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 text-center">
+                <a href="{% url 'products:combos_dashboard' %}"
+                   class="btn btn-secondary">← Volver al Creador de Combos</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -16,22 +16,22 @@
             </div>
           </div>
         </div>
-        {% comment %} <div class="col-md-3">
-        <div class="card text-white bg-success">
-          <div class="card-body">
-            <h5 class="card-title">⚙️ Producción</h5>
-            <p class="card-text">{{ total_batches }} lotes</p>
+        <div class="col-md-3">
+          <div class="card text-white bg-success">
+            <div class="card-body">
+              <h5 class="card-title">⚙️ Producción</h5>
+              <p class="card-text">{{ total_batches }} lotes</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-white bg-warning">
-          <div class="card-body">
-            <h5 class="card-title">🚚 Pedidos</h5>
-            <p class="card-text">{{ active_orders }} activos</p>
+        <div class="col-md-3">
+          <div class="card text-white bg-warning">
+            <div class="card-body">
+              <h5 class="card-title">🚚 Pedidos</h5>
+              <p class="card-text">{{ active_orders }} activos</p>
+            </div>
           </div>
         </div>
-        </div> {% endcomment %}
         <div class="col-md-3">
           <div class="card text-white bg-info">
             <div class="card-body">
@@ -62,11 +62,12 @@
                   <br />
                   <small>Facade, Composite, Factory</small>
                 </div>
-                {% comment %} <div class="col-md-3 text-center">
-                  <a href="{% url 'orders:dashboard' %}" class="btn btn-outline-warning btn-lg mb-2">🚚 Pedidos</a>
+                <div class="col-md-3 text-center">
+                  <a href="{% url 'orders:dashboard' %}"
+                     class="btn btn-outline-warning btn-lg mb-2">🚚 Pedidos</a>
                   <br />
                   <small>Strategy, Adapter</small>
-                </div> {% endcomment %}
+                </div>
                 <div class="col-md-3 text-center">
                   <a href="{% url 'admin:index' %}"
                      class="btn btn-outline-dark btn-lg mb-2">⚙️ Admin</a>
